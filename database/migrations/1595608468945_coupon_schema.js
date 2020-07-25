@@ -13,7 +13,7 @@ class CouponSchema extends Schema {
       table.integer('quantity').defaultTo(1)
       table.enu('can_use_for', ['product', 'client', 'product_client', 'all'])
 
-      table.enu('type', ['free', 56,])
+      table.enu('type', ['free', 'percent', 'currency']).defaultTo(false)
       table.timestamps()
     })
   }

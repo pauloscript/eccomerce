@@ -19,8 +19,8 @@ class Category extends Model {
 
     //Relacionamento entre Produtos e Categorias
 
-    categories() {
-        return this.belongsToMany('App/Models/Category')
+    products () {
+        return this.belongsToMany('App/Models/Product')
     }
 
     //Relacionamento entre Produtos e Cupons de desconto

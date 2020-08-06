@@ -2,17 +2,17 @@
 
 const Database = use('Database')
 const User = use('App/Models/User')
-const Role = user('Role')
+const Role = use('Role')
 class AuthController {
   async register({ request, response }) {
     const trx = await Database.beginTransaction()
 
     try {
-      const data = request.only(['name', 'surname', 'email', 'password'])
+      const {name, surname, email, password} = request.all()
 
-      const user = await User.create({ data }, trx)
+      const user = await User.create({ name, surname, email, password}, trx)
 
-      const userRole = await Role.findBy('slug', 'client')
+      const userRole = await Role.findBy('name', 'client')
 
       await user.roles().attach([userRole.id], null, trx) //attach() sempre espera um array
 

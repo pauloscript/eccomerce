@@ -1,5 +1,5 @@
 'use strict'
-
+const User = use('App/Models/User')
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
@@ -16,8 +16,20 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
+   * @param {Object} ctx.pagination
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, view, pagination }) {
+    const name = request.input('name')
+
+    const query = User.query()
+
+    if (name) {
+      query.where('name', 'ILIKE', `%${name}`)
+    }
+
+    const users = await query.paginate(pagination.page, pagination.limit)
+
+    return response.send(users)
   }
 
   /**
@@ -29,64 +41,60 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async create ({ request, response, view }) {
+  async store({ request, response, view }) {
+    try {
+      const userData = request.only([
+        'name',
+        'surname',
+        'email',
+        'password',
+        'image_id',
+      ])
+
+      const user = await User.create(userData)
+
+      return response.status(201).send(user)
+    } catch (error) {
+      return response
+        .status(400)
+        .send({ message: 'Não foi possivel cadastrar este usuário!' })
+    }
   }
 
-  /**
-   * Create/save a new user.
-   * POST users
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store ({ request, response }) {
+  async show({ params: { id }, response }) {
+    const user = await User.findOrFail(id)
+
+    return response.send(user)
   }
 
-  /**
-   * Display a single user.
-   * GET users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async show ({ params, request, response, view }) {
+  async update({ params: { id }, request, response }) {
+    const user = await User.findOrFail(id)
+
+    const userData = request.only([
+      'name',
+      'surname',
+      'email',
+      'password',
+      'image_id',
+    ])
+
+    user.merge(userData)
+    await user.save()
+
+    return response.send(user)
   }
 
-  /**
-   * Render a form to update an existing user.
-   * GET users/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {
-  }
+  async destroy({ params: { id }, request, response }) {
+    const user = await User.findOrFail(id)
 
-  /**
-   * Update user details.
-   * PUT or PATCH users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update ({ params, request, response }) {
-  }
-
-  /**
-   * Delete a user with id.
-   * DELETE users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async destroy ({ params, request, response }) {
+    try {
+      user.delete()
+      return response.status(204).send()
+    } catch (error) {
+      response
+        .status(500)
+        .send({ message: 'Não foi possível deleter este usuário' })
+    }
   }
 }
 
